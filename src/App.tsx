@@ -5,9 +5,7 @@ import Layout from "./templates/Layout";
 function App() {
   return (
     <Routes>
-      <Route path='/' element={<Layout />}>
-        <Route path='' element={<Home />} />
-      </Route>
+      <Route index element={<Layout children={<Home />} />} />
     </Routes>
   );
 }

@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "deploy": "pnpm build && cp robots.txt sitemap.xml ./dist/ && markmyimage.kro.kr > ./dist/CNAME && touch ./dist/.nojekyll && cd ./dist/ && git init && git add -A && git commit -m \"gh-pages\" && git push https://github.com/kkn1125/markmyimage.git master:gh-pages"
+    "deploy": "pnpm build && cp robots.txt sitemap.xml ./dist/ && echo markmyimage.kro.kr > ./dist/CNAME && touch ./dist/.nojekyll && cd ./dist/ && git init && git add -A && git commit -m \"gh-pages\" && git push https://github.com/kkn1125/markmyimage.git master:gh-pages -f"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
