@@ -3,15 +3,20 @@ import {
   Button,
   Divider,
   IconButton,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Stack,
   TextField,
   Typography,
+  keyframes,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
+import ImageIcon from "@mui/icons-material/Image";
 
 function Home() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -32,8 +37,10 @@ function Home() {
   const [fontSize, setFontSize] = useState(16);
   const [useLine, setUseLine] = useState(true);
   const [colorValue, setColorValue] = useState("#ffffff");
-  const [opacity, setOpacity] = useState(126);
+  const [opacity, setOpacity] = useState(255 /* 126 */);
   const [imageRotate, setImageRotate] = useState(0);
+  const [compositeOperation, setCompositeOperation] =
+    useState<GlobalCompositeOperation>("source-over");
 
   useEffect(() => {
     const uploadImage = uploadInputRef.current;
@@ -59,6 +66,12 @@ function Home() {
       setWordOffset(1);
       setQuality(1);
       setMoreDetail(false);
+      setFontSize(16);
+      setUseLine(true);
+      setColorValue("#ffffff");
+      setOpacity(255);
+      setImageRotate(0);
+      setCompositeOperation("source-over");
       clearUploadImage();
     };
   }, []);
@@ -153,6 +166,8 @@ function Home() {
       // ctx.lineWidth = 2;
       // ctx.strokeStyle = "#000000a6";
       ctx.fillStyle = colorValue + opacity.toString(16).padStart(2, "0");
+      // console.log(compositeOperation);
+      ctx.globalCompositeOperation = compositeOperation;
 
       ctx.save();
 
@@ -309,6 +324,7 @@ function Home() {
     }, 0);
   }, [
     colorValue,
+    compositeOperation,
     convertImage,
     fontSize,
     imageRotate,
@@ -500,9 +516,23 @@ function Home() {
     setImageRotate(imageRotate - 90 < 0 ? 270 : imageRotate - 90);
   }
 
+  function handleImageUnsetRotate() {
+    setImageRotate(0);
+  }
+
   function handleImageRightRotate() {
     setImageRotate(imageRotate + 90 > 270 ? 0 : imageRotate + 90);
   }
+
+  function handleChangeComposite(e: SelectChangeEvent) {
+    setCompositeOperation(e.target.value as GlobalCompositeOperation);
+  }
+
+  const ex = keyframes`
+    0%{box-shadow: 0px 0px 0px 0px #dd489600;}
+    50%{box-shadow: 0px 0px 1rem 0px #dd489656;}
+    100%{box-shadow: 0px 0px 0px 0px #dd489600;}
+  `;
 
   return (
     <Stack
@@ -591,9 +621,12 @@ function Home() {
                 maxHeight: "100%",
                 height: "min-content",
                 ...(!sourceUrl && {
+                  animation: `${ex} 2s ease-in-out infinite`,
+                }),
+                ...(!sourceUrl && {
                   "&::before": {
                     m: "auto",
-                    content: '"upload"',
+                    content: '"🖼️ upload"',
                     textTransform: "uppercase",
                     fontWeight: 700,
                     my: 8,
@@ -668,9 +701,24 @@ function Home() {
                     onChange={handleChangeOpacity}
                   />
                 </Stack>
-                <Stack gap={2}>
+                <Stack direction='row' gap={2}>
+                  {/* rotate options */}
                   <Stack gap={1}>
-                    <Stack direction='row' justifyContent='center' gap={1}>
+                    <Stack direction='row' gap={1}>
+                      <IconButton onClick={handleImageLeftRotate}>
+                        <RotateLeftIcon />
+                      </IconButton>
+                      <IconButton onClick={handleImageUnsetRotate}>
+                        <ImageIcon />
+                      </IconButton>
+                      <IconButton onClick={handleImageRightRotate}>
+                        <RotateRightIcon />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                  {/* placement control options */}
+                  <Stack gap={1}>
+                    <Stack direction='row' gap={1}>
                       <IconButton onClick={() => handlePlacement("top-left")}>
                         <KeyboardArrowUpIcon
                           sx={{ transform: "rotate(-45deg)" }}
@@ -685,7 +733,7 @@ function Home() {
                         />
                       </IconButton>
                     </Stack>
-                    <Stack direction='row' justifyContent='center' gap={1}>
+                    <Stack direction='row' gap={1}>
                       <IconButton onClick={() => handlePlacement("left")}>
                         <KeyboardArrowUpIcon
                           sx={{ transform: "rotate(-90deg)" }}
@@ -700,7 +748,7 @@ function Home() {
                         />
                       </IconButton>
                     </Stack>
-                    <Stack direction='row' justifyContent='center' gap={1}>
+                    <Stack direction='row' gap={1}>
                       <IconButton
                         onClick={() => handlePlacement("bottom-left")}>
                         <KeyboardArrowUpIcon
@@ -720,23 +768,55 @@ function Home() {
                       </IconButton>
                     </Stack>
                   </Stack>
-                  <Stack direction='row'>
-                    <IconButton onClick={handleImageLeftRotate}>
-                      <RotateLeftIcon />
-                    </IconButton>
-                    <IconButton onClick={handleImageRightRotate}>
-                      <RotateRightIcon />
-                    </IconButton>
-                  </Stack>
                 </Stack>
                 <Stack gap={2}>
                   <Stack direction='row' gap={1}>
+                    <Select
+                      labelId='demo-simple-select-label'
+                      id='demo-simple-select'
+                      value={compositeOperation || ""}
+                      label='Age'
+                      onChange={handleChangeComposite}>
+                      <MenuItem value={""}></MenuItem>
+                      {[
+                        "color",
+                        "color-burn",
+                        "color-dodge",
+                        "copy",
+                        "darken",
+                        "destination-atop",
+                        "destination-in",
+                        "destination-out",
+                        "destination-over",
+                        "difference",
+                        "exclusion",
+                        "hard-light",
+                        "hue",
+                        "lighten",
+                        "lighter",
+                        "luminosity",
+                        "multiply",
+                        "overlay",
+                        "saturation",
+                        "screen",
+                        "soft-light",
+                        "source-atop",
+                        "source-in",
+                        "source-out",
+                        "source-over",
+                        "xor",
+                      ].map((key) => (
+                        <MenuItem key={key} value={key}>
+                          {key}
+                        </MenuItem>
+                      ))}
+                    </Select>
+
                     <Button
                       variant='contained'
                       onClick={handleToggleMultilines}>
                       멀티라인
                     </Button>
-
                     {toggleMultilines && (
                       <Button variant='contained' onClick={handleUseLine}>
                         {useLine ? "라인 채우기" : "공백 채우기"}
