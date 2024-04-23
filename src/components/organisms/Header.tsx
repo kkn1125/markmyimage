@@ -11,15 +11,29 @@ function Header() {
         p: 2,
       }}>
       <Stack direction='row' justifyContent='space-between'>
-        <Typography
+        <Stack
           component={Link}
-          fontWeight={700}
           to='/'
+          direction='row'
+          gap={1}
+          alignItems='center'
           color='inherit'
-          textTransform='uppercase'
           sx={{ textDecoration: "none" }}>
-          Mark my image
-        </Typography>
+          <Box
+            component='img'
+            src='/images/logo.png'
+            sx={{
+              width: 24,
+              height: "auto",
+            }}
+          />
+          <Typography
+            fontWeight={700}
+            color='inherit'
+            textTransform='uppercase'>
+            Mark my image
+          </Typography>
+        </Stack>
         <Chip
           size='small'
           label={"v " + pkg.version}

@@ -9,7 +9,6 @@ import {
   Stack,
   TextField,
   Typography,
-  keyframes,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -153,6 +152,17 @@ function Home() {
 
       const imgHeight = convertImage.height;
       const imgWidth = convertImage.width;
+
+      ctx.globalCompositeOperation = "difference";
+      ctx.fillStyle = "#ffffff57";
+      const size = Math.floor(
+        16 * (Math.max(imgWidth, imgHeight) / Math.min(imgWidth, imgHeight))
+      );
+      ctx.font = `normal ${size}px san-serif`;
+      const ownerBy = "published by markmyimage";
+      const { width: baseWidth, hangingBaseline: baseline } =
+        ctx.measureText(ownerBy);
+      ctx.fillText(ownerBy, imgWidth - baseWidth - size, imgHeight - baseline);
 
       const max = Math.max(imgWidth, imgHeight);
       const min = Math.min(imgWidth, imgHeight);
@@ -504,7 +514,9 @@ function Home() {
 
   function handleRotate(e: ChangeEvent<HTMLInputElement>) {
     const value = +e.target.value;
-
+    if (Number.isNaN(value)) {
+      return;
+    }
     setRotate(Math.abs(value) >= 360 ? 0 : value);
   }
 
@@ -528,11 +540,11 @@ function Home() {
     setCompositeOperation(e.target.value as GlobalCompositeOperation);
   }
 
-  const ex = keyframes`
-    0%{box-shadow: 0px 0px 0px 0px #dd489600;}
-    50%{box-shadow: 0px 0px 1rem 0px #dd489656;}
-    100%{box-shadow: 0px 0px 0px 0px #dd489600;}
-  `;
+  // const ex = keyframes`
+  //   0%{box-shadow: 0px 0px 0px 0px #dd489600;}
+  //   50%{box-shadow: 0px 0px 1rem 0px #dd489656;}
+  //   100%{box-shadow: 0px 0px 0px 0px #dd489600;}
+  // `;
 
   return (
     <Stack
@@ -599,7 +611,7 @@ function Home() {
         <Stack
           direction={{ xs: "column", md: "row" }}
           gap={2}
-          sx={{ position: "relative", maxHeight: "calc(100vh - 112px)" }}>
+          sx={{ position: "relative" /* maxHeight: "calc(100vh - 112px)" */ }}>
           <Stack>
             <Typography
               fontWeight={700}
@@ -616,14 +628,11 @@ function Home() {
                 backgroundColor: sourceUrl ? "transparent" : "#ccc",
                 width: "auto",
                 minWidth: 150,
-                // minHeight: 150,
                 maxWidth: "100%",
                 maxHeight: "100%",
                 height: "min-content",
                 ...(!sourceUrl && {
-                  animation: `${ex} 2s ease-in-out infinite`,
-                }),
-                ...(!sourceUrl && {
+                  border: "3px dashed #999",
                   "&::before": {
                     m: "auto",
                     content: '"🖼️ upload"',
@@ -661,10 +670,10 @@ function Home() {
             accept='image/*'
             onChange={handleUploadImage}
           />
-          <Stack gap={3} flex={1}>
+          <Stack gap={3}>
             {sourceImage && (
               <Stack gap={2}>
-                <Stack>
+                <Stack alignItems='center'>
                   <TextField
                     fullWidth
                     label='워터마크 워딩'
@@ -674,14 +683,57 @@ function Home() {
                     value={words}
                   />
                 </Stack>
-                <Stack direction='row' gap={2}>
+                <Stack alignItems='center' gap={2}>
                   <TextField
+                    fullWidth
                     label='폰트 크기'
                     type='number'
                     value={fontSize}
                     size='small'
                     onChange={handleChangeFontSize}
                   />
+                  <Select
+                    size='small'
+                    fullWidth
+                    labelId='demo-simple-select-label'
+                    id='demo-simple-select'
+                    value={compositeOperation || ""}
+                    label='Age'
+                    onChange={handleChangeComposite}>
+                    <MenuItem value={""}></MenuItem>
+                    {[
+                      "color",
+                      "color-burn",
+                      "color-dodge",
+                      "copy",
+                      "darken",
+                      "destination-atop",
+                      "destination-in",
+                      "destination-out",
+                      "destination-over",
+                      "difference",
+                      "exclusion",
+                      "hard-light",
+                      "hue",
+                      "lighten",
+                      "lighter",
+                      "luminosity",
+                      "multiply",
+                      "overlay",
+                      "saturation",
+                      "screen",
+                      "soft-light",
+                      "source-atop",
+                      "source-in",
+                      "source-out",
+                      "source-over",
+                      "xor",
+                    ].map((key) => (
+                      <MenuItem key={key} value={key}>
+                        {key}
+                      </MenuItem>
+                    ))}
+                  </Select>
                   <Box
                     component='input'
                     type='color'
@@ -689,7 +741,6 @@ function Home() {
                     onChange={handleChangeColor}
                     sx={{
                       border: "1px solid #ccc",
-                      height: "100%",
                     }}
                   />
                   <Box
@@ -701,7 +752,7 @@ function Home() {
                     onChange={handleChangeOpacity}
                   />
                 </Stack>
-                <Stack direction='row' gap={2}>
+                <Stack alignItems='center' gap={2}>
                   {/* rotate options */}
                   <Stack gap={1}>
                     <Stack direction='row' gap={1}>
@@ -769,91 +820,50 @@ function Home() {
                     </Stack>
                   </Stack>
                 </Stack>
-                <Stack gap={2}>
-                  <Stack direction='row' gap={1}>
-                    <Select
-                      labelId='demo-simple-select-label'
-                      id='demo-simple-select'
-                      value={compositeOperation || ""}
-                      label='Age'
-                      onChange={handleChangeComposite}>
-                      <MenuItem value={""}></MenuItem>
-                      {[
-                        "color",
-                        "color-burn",
-                        "color-dodge",
-                        "copy",
-                        "darken",
-                        "destination-atop",
-                        "destination-in",
-                        "destination-out",
-                        "destination-over",
-                        "difference",
-                        "exclusion",
-                        "hard-light",
-                        "hue",
-                        "lighten",
-                        "lighter",
-                        "luminosity",
-                        "multiply",
-                        "overlay",
-                        "saturation",
-                        "screen",
-                        "soft-light",
-                        "source-atop",
-                        "source-in",
-                        "source-out",
-                        "source-over",
-                        "xor",
-                      ].map((key) => (
-                        <MenuItem key={key} value={key}>
-                          {key}
-                        </MenuItem>
-                      ))}
-                    </Select>
-
-                    <Button
-                      variant='contained'
-                      onClick={handleToggleMultilines}>
-                      멀티라인
+                <Stack alignItems='center' gap={2}>
+                  <Button variant='contained' onClick={handleToggleMultilines}>
+                    멀티라인
+                  </Button>
+                  {toggleMultilines && (
+                    <Button variant='contained' onClick={handleUseLine}>
+                      {useLine ? "라인 채우기" : "공백 채우기"}
                     </Button>
-                    {toggleMultilines && (
-                      <Button variant='contained' onClick={handleUseLine}>
-                        {useLine ? "라인 채우기" : "공백 채우기"}
-                      </Button>
-                    )}
-                    {toggleMultilines && (
-                      <TextField
-                        label='오프셋'
-                        size='small'
-                        type='number'
-                        inputProps={{
-                          min: 1,
-                          max: 2,
-                          step: 0.01,
-                        }}
-                        value={wordOffset}
-                        onChange={handleWordOffset}
-                      />
-                    )}
-                    {toggleMultilines && (
-                      <TextField
-                        label='각도'
-                        size='small'
-                        type='number'
-                        inputProps={{
-                          min: -360,
-                          max: 360,
-                          step: 1,
-                        }}
-                        value={rotate}
-                        onChange={handleRotate}
-                      />
-                    )}
-                  </Stack>
+                  )}
+                  {toggleMultilines && (
+                    <TextField
+                      fullWidth
+                      label='오프셋'
+                      size='small'
+                      type='number'
+                      inputProps={{
+                        min: 1,
+                        max: 2,
+                        step: 0.01,
+                      }}
+                      value={wordOffset}
+                      onChange={handleWordOffset}
+                    />
+                  )}
+                  {toggleMultilines && (
+                    <TextField
+                      fullWidth
+                      label='각도'
+                      size='small'
+                      type='text'
+                      inputProps={{
+                        min: -360,
+                        max: 360,
+                        step: 1,
+                        pattern: "-?[0-9]+",
+                      }}
+                      value={rotate}
+                      onChange={handleRotate}
+                    />
+                  )}
                 </Stack>
-                <Stack direction='row' gap={1}>
+                <Stack gap={1}>
                   <TextField
+                    fullWidth
                     label='이미지 퀄리티'
                     size='small'
                     type='number'
