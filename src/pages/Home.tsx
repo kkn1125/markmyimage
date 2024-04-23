@@ -475,7 +475,7 @@ function Home() {
 
   function handleWordOffset(e: ChangeEvent<HTMLInputElement>) {
     const value = +e.target.value;
-    setWordOffset(value);
+    setWordOffset(value > 0 ? (value < 9 ? value : 9) : 0);
   }
 
   function handleExport() {
@@ -499,7 +499,10 @@ function Home() {
 
   function handleChangeFontSize(e: ChangeEvent<HTMLInputElement>) {
     const value = +e.target.value;
-    setFontSize(value);
+    if (Number.isNaN(value)) {
+      return;
+    }
+    setFontSize(value > 8 ? (value < 150 ? value : 150) : 8);
   }
 
   function handleChangeColor(e: ChangeEvent<HTMLInputElement>) {
@@ -687,7 +690,7 @@ function Home() {
                   <TextField
                     fullWidth
                     label='폰트 크기'
-                    type='number'
+                    type='text'
                     value={fontSize}
                     size='small'
                     onChange={handleChangeFontSize}
@@ -834,12 +837,12 @@ function Home() {
                       fullWidth
                       label='오프셋'
                       size='small'
-                      type='number'
-                      inputProps={{
-                        min: 1,
-                        max: 2,
-                        step: 0.01,
-                      }}
+                      type='text'
+                      // inputProps={{
+                      //   min: 1,
+                      //   max: 2,
+                      //   step: 0.01,
+                      // }}
                       value={wordOffset}
                       onChange={handleWordOffset}
                     />
