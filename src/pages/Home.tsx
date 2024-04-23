@@ -153,17 +153,6 @@ function Home() {
       const imgHeight = convertImage.height;
       const imgWidth = convertImage.width;
 
-      ctx.globalCompositeOperation = "difference";
-      ctx.fillStyle = "#ffffff57";
-      const size = Math.floor(
-        16 * (Math.max(imgWidth, imgHeight) / Math.min(imgWidth, imgHeight))
-      );
-      ctx.font = `normal ${size}px san-serif`;
-      const ownerBy = "published by markmyimage";
-      const { width: baseWidth, hangingBaseline: baseline } =
-        ctx.measureText(ownerBy);
-      ctx.fillText(ownerBy, imgWidth - baseWidth - size, imgHeight - baseline);
-
       const max = Math.max(imgWidth, imgHeight);
       const min = Math.min(imgWidth, imgHeight);
       const avg = (max + min) / 2;
@@ -331,6 +320,17 @@ function Home() {
       // if (result) {
       //   alert("Mark My Image를 통해 워터마크 적용한 이미지로 판별됩니다.");
       // }
+
+      ctx.globalCompositeOperation = "difference";
+      ctx.fillStyle = "#ffffff57";
+      const size = Math.floor(
+        16 * (Math.max(imgWidth, imgHeight) / Math.min(imgWidth, imgHeight))
+      );
+      ctx.font = `normal ${size}px san-serif`;
+      const ownerBy = "published by markmyimage";
+      const { width: baseWidth, hangingBaseline: baseline } =
+        ctx.measureText(ownerBy);
+      ctx.fillText(ownerBy, imgWidth - baseWidth - size, imgHeight - baseline);
     }, 0);
   }, [
     colorValue,
@@ -575,7 +575,7 @@ function Home() {
               sx={{
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#ccc",
+                backgroundColor: "#222",
                 "&::before": {
                   content: '"PREVIEW"',
                   m: "auto",
@@ -625,14 +625,14 @@ function Home() {
               htmlFor='imginput'
               sx={{
                 position: "relative",
-                backgroundColor: sourceUrl ? "transparent" : "#ccc",
+                backgroundColor: sourceUrl ? "transparent" : "#222",
                 width: "auto",
                 minWidth: 150,
                 maxWidth: "100%",
                 maxHeight: "100%",
                 height: "min-content",
                 ...(!sourceUrl && {
-                  border: "3px dashed #999",
+                  border: "3px dashed #444444",
                   "&::before": {
                     m: "auto",
                     content: '"🖼️ upload"',
@@ -878,7 +878,7 @@ function Home() {
                       flex: 0.55,
                     }}
                   />
-                  <Button onClick={handleMoreDetailToggle}>
+                  <Button variant='outlined' onClick={handleMoreDetailToggle}>
                     {moreDetail ? "선명하게" : "원본"}
                   </Button>
                   <Button

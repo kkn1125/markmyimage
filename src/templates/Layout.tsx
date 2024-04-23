@@ -7,7 +7,7 @@ function Layout({ children }: { children: ReactElement }) {
   return (
     <Stack sx={{ height: "inherit" }}>
       <Header />
-      <Stack flex={1} sx={{ overflow: "auto" }}>
+      <Stack flex={1} sx={{ overflow: "auto", backgroundColor: "#333333" }}>
         {children}
       </Stack>
       <Footer />

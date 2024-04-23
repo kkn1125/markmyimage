@@ -6,12 +6,13 @@ function Header() {
   return (
     <Box
       sx={{
-        backgroundColor: (theme) => theme.palette.text.primary,
-        color: (theme) => theme.palette.background.default,
+        backgroundColor: (theme) => theme.palette.background.default,
+        color: (theme) => theme.palette.text.primary,
         p: 2,
       }}>
       <Stack direction='row' justifyContent='space-between'>
         <Stack
+          title='mark my image'
           component={Link}
           to='/'
           direction='row'
@@ -25,6 +26,9 @@ function Header() {
             sx={{
               width: 24,
               height: "auto",
+              // borderRadius: "999px",
+              filter: "brightness(1.5)",
+              // backgroundColor: (theme) => theme.palette.text.primary,
             }}
           />
           <Typography
