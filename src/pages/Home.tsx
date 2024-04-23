@@ -10,6 +10,8 @@ import {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
 
 function Home() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -31,6 +33,7 @@ function Home() {
   const [useLine, setUseLine] = useState(true);
   const [colorValue, setColorValue] = useState("#ffffff");
   const [opacity, setOpacity] = useState(126);
+  const [imageRotate, setImageRotate] = useState(0);
 
   useEffect(() => {
     const uploadImage = uploadInputRef.current;
@@ -88,6 +91,7 @@ function Home() {
 
   useEffect(() => {
     const canvasRef = canvas.current;
+
     window.setTimeout(() => {
       if (!readyToDraw) return;
       if (!convertImage) return;
@@ -116,7 +120,23 @@ function Home() {
         ctx.imageSmoothingEnabled = true;
       }
 
+      const imageRotateDeg = (imageRotate * Math.PI) / 180;
+
+      ctx.save();
+      if (imageRotate > 0) {
+        ctx.rotate(imageRotateDeg);
+      }
+      if (imageRotate === 0) {
+        ctx.translate(0, 0);
+      } else if (imageRotate === 90) {
+        ctx.translate(0, -convertImage.height);
+      } else if (imageRotate === 180) {
+        ctx.translate(-convertImage.width, -convertImage.height);
+      } else if (imageRotate === 270) {
+        ctx.translate(-convertImage.width, 0);
+      }
       ctx.drawImage(convertImage, 0, 0);
+      ctx.restore();
 
       const imgHeight = convertImage.height;
       const imgWidth = convertImage.width;
@@ -248,11 +268,50 @@ function Home() {
       }
 
       ctx.restore();
+
+      // function checkImageByMarkMyImage() {
+      //   if (!convertImage) return false;
+      //   if (!canvasRef) return false;
+
+      //   const ctx = canvasRef.getContext("2d");
+      //   if (ctx && ctx instanceof CanvasRenderingContext2D) {
+      //     const images = ctx.getImageData(
+      //       0,
+      //       0,
+      //       convertImage.width,
+      //       convertImage.height
+      //     );
+
+      //     const toCode = (word: string) =>
+      //       word.charCodeAt(0).toString(16).padStart(2, "0");
+      //     const signature =
+      //       "#" + toCode("d") + toCode("e") + toCode("v") + "ff";
+      //     const leftTop = checkPixelColor(images, 0, signature);
+      //     const rightTop = checkPixelColor(images, images.width, signature);
+      //     const leftBottom = checkPixelColor(
+      //       images,
+      //       images.width * (images.height - 1),
+      //       signature
+      //     );
+      //     const rightBottom = checkPixelColor(
+      //       images,
+      //       images.width * images.height,
+      //       signature
+      //     );
+      //     return leftTop && rightTop && leftBottom && rightBottom;
+      //   }
+      // }
+
+      // const result = checkImageByMarkMyImage();
+      // if (result) {
+      //   alert("Mark My Image를 통해 워터마크 적용한 이미지로 판별됩니다.");
+      // }
     }, 0);
   }, [
     colorValue,
     convertImage,
     fontSize,
+    imageRotate,
     moreDetail,
     opacity,
     placement,
@@ -265,21 +324,11 @@ function Home() {
     words,
   ]);
 
-  // useEffect(() => {
-  //   if (!originalImageRef.current) return;
-  //   const { width: imgWidth, height: imgHeight } =
-  //     originalImageRef.current.getBoundingClientRect();
-  //   if (destImageRef.current) {
-  //     destImageRef.current.style.aspectRatio = "" + imgWidth / imgHeight;
-  //   }
-  // }, [markedImageUrl]);
-
   useEffect(() => {
     if (!markedImageUrl) return;
     if (!sourceImage) return;
 
     const link = document.createElement("a");
-    // const downloadUrl = URL.createObjectURL(markedImageUrl)
     link.download =
       sourceImage.name.split(".")[0] + "-convert_by_markmyimage" + ".png";
     link.href = markedImageUrl;
@@ -287,6 +336,82 @@ function Home() {
     link.remove();
     setMarkedImageUrl("");
   }, [markedImageUrl, sourceImage]);
+
+  // function checkPixelColor(images: ImageData, start: number, color: string) {
+  //   return (
+  //     color ===
+  //     "#" +
+  //       (images.data[start].toString(16).padStart(2, "0") +
+  //         images.data[start + 1].toString(16).padStart(2, "0") +
+  //         images.data[start + 2].toString(16).padStart(2, "0") +
+  //         images.data[start + 3].toString(16).padStart(2, "0"))
+  //   );
+  // }
+
+  /* 버전 또는 워터마크 적용 여부 체크 */
+  // function setPixelColor(
+  //   images: ImageData,
+  //   start: number,
+  //   r: number,
+  //   g: number,
+  //   b: number
+  // ) {
+  //   images.data[start] = r;
+  //   images.data[start + 1] = g;
+  //   images.data[start + 2] = b;
+  //   images.data[start + 3] = 255;
+  // }
+  // function setImageByMarkMyImage() {
+  //   const canvasRef = canvas.current;
+  //   if (!convertImage) return;
+  //   if (!canvasRef) return;
+
+  //   const ctx = canvasRef.getContext("2d");
+  //   if (ctx && ctx instanceof CanvasRenderingContext2D) {
+  //     const images = ctx.getImageData(
+  //       0,
+  //       0,
+  //       convertImage.width,
+  //       convertImage.height
+  //     );
+
+  //     const toCharCode = (word: string) => word.charCodeAt(0);
+
+  //     // left top
+  //     setPixelColor(
+  //       images,
+  //       0,
+  //       toCharCode("d"),
+  //       toCharCode("e"),
+  //       toCharCode("v")
+  //     );
+  //     // right top
+  //     setPixelColor(
+  //       images,
+  //       images.width * 4,
+  //       toCharCode("d"),
+  //       toCharCode("e"),
+  //       toCharCode("v")
+  //     );
+  //     // left bottom
+  //     setPixelColor(
+  //       images,
+  //       images.width * (images.height - 1),
+  //       toCharCode("d"),
+  //       toCharCode("e"),
+  //       toCharCode("v")
+  //     );
+  //     // right bottom
+  //     setPixelColor(
+  //       images,
+  //       images.width * images.height,
+  //       toCharCode("d"),
+  //       toCharCode("e"),
+  //       toCharCode("v")
+  //     );
+  //     ctx.putImageData(images, 0, 0);
+  //   }
+  // }
 
   function handleUploadImage(e: ChangeEvent<HTMLInputElement>) {
     setSourceUrl("");
@@ -322,17 +447,6 @@ function Home() {
     setToggleMultilines(!toggleMultilines);
   }
 
-  // function handleToggleUseDeg() {
-  //   setToggleUseDeg((toggleUseDeg) => {
-  //     if (toggleUseDeg) {
-  //       setRotate(0);
-  //     } else {
-  //       setRotate(-45);
-  //     }
-  //     return !toggleUseDeg;
-  //   });
-  // }
-
   function handleWordOffset(e: ChangeEvent<HTMLInputElement>) {
     const value = +e.target.value;
     setWordOffset(value);
@@ -341,6 +455,9 @@ function Home() {
   function handleExport() {
     const canvasRef = canvas.current;
     if (!canvasRef) return;
+
+    // setImageByMarkMyImage();
+
     const pngUrl = canvasRef.toDataURL("image/png", quality);
     setMarkedImageUrl(pngUrl);
   }
@@ -377,6 +494,14 @@ function Home() {
 
   function handleUseLine() {
     setUseLine(!useLine);
+  }
+
+  function handleImageLeftRotate() {
+    setImageRotate(imageRotate - 90 < 0 ? 270 : imageRotate - 90);
+  }
+
+  function handleImageRightRotate() {
+    setImageRotate(imageRotate + 90 > 270 ? 0 : imageRotate + 90);
   }
 
   return (
@@ -543,52 +668,64 @@ function Home() {
                     onChange={handleChangeOpacity}
                   />
                 </Stack>
-                <Stack gap={1}>
-                  <Stack direction='row' justifyContent='center' gap={1}>
-                    <IconButton onClick={() => handlePlacement("top-left")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(-45deg)" }}
-                      />
-                    </IconButton>
-                    <IconButton onClick={() => handlePlacement("top")}>
-                      <KeyboardArrowUpIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handlePlacement("top-right")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(45deg)" }}
-                      />
-                    </IconButton>
+                <Stack gap={2}>
+                  <Stack gap={1}>
+                    <Stack direction='row' justifyContent='center' gap={1}>
+                      <IconButton onClick={() => handlePlacement("top-left")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(-45deg)" }}
+                        />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlacement("top")}>
+                        <KeyboardArrowUpIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlacement("top-right")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(45deg)" }}
+                        />
+                      </IconButton>
+                    </Stack>
+                    <Stack direction='row' justifyContent='center' gap={1}>
+                      <IconButton onClick={() => handlePlacement("left")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(-90deg)" }}
+                        />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlacement("center")}>
+                        <FilterCenterFocusIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlacement("right")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(90deg)" }}
+                        />
+                      </IconButton>
+                    </Stack>
+                    <Stack direction='row' justifyContent='center' gap={1}>
+                      <IconButton
+                        onClick={() => handlePlacement("bottom-left")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(-135deg)" }}
+                        />
+                      </IconButton>
+                      <IconButton onClick={() => handlePlacement("bottom")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(180deg)" }}
+                        />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handlePlacement("bottom-right")}>
+                        <KeyboardArrowUpIcon
+                          sx={{ transform: "rotate(135deg)" }}
+                        />
+                      </IconButton>
+                    </Stack>
                   </Stack>
-                  <Stack direction='row' justifyContent='center' gap={1}>
-                    <IconButton onClick={() => handlePlacement("left")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(-90deg)" }}
-                      />
+                  <Stack direction='row'>
+                    <IconButton onClick={handleImageLeftRotate}>
+                      <RotateLeftIcon />
                     </IconButton>
-                    <IconButton onClick={() => handlePlacement("center")}>
-                      <FilterCenterFocusIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handlePlacement("right")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(90deg)" }}
-                      />
-                    </IconButton>
-                  </Stack>
-                  <Stack direction='row' justifyContent='center' gap={1}>
-                    <IconButton onClick={() => handlePlacement("bottom-left")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(-135deg)" }}
-                      />
-                    </IconButton>
-                    <IconButton onClick={() => handlePlacement("bottom")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(180deg)" }}
-                      />
-                    </IconButton>
-                    <IconButton onClick={() => handlePlacement("bottom-right")}>
-                      <KeyboardArrowUpIcon
-                        sx={{ transform: "rotate(135deg)" }}
-                      />
+                    <IconButton onClick={handleImageRightRotate}>
+                      <RotateRightIcon />
                     </IconButton>
                   </Stack>
                 </Stack>
@@ -599,6 +736,7 @@ function Home() {
                       onClick={handleToggleMultilines}>
                       멀티라인
                     </Button>
+
                     {toggleMultilines && (
                       <Button variant='contained' onClick={handleUseLine}>
                         {useLine ? "라인 채우기" : "공백 채우기"}
