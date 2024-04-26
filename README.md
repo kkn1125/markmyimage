@@ -2,9 +2,13 @@
 
 Mark my image는 웹에서 쉽게 이미지에 워터마크를 세기는 서비스입니다. 추가 기능을 개발 중에 있습니다.
 
+## Version
+
+`v1.0.3`
+
 ## 미리보기
 
-![미리보기](https://github.com/kkn1125/markmyimage/assets/71887242/9fb32672-ccba-4d0d-996a-aa0729875295)
+![미리보기](https://github.com/kkn1125/kkn1125.github.io/assets/71887242/1b06ddc3-a956-4467-a8e7-73342f6a4f3f)
 
 ## Update
 
