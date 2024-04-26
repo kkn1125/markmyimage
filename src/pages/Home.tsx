@@ -553,17 +553,23 @@ function Home() {
         flex={1}
         justifyContent='flex-start'
         sx={{
-          width: "100%",
+          // minWidth: "50vw",
           boxSizing: "border-box",
           p: 5,
         }}>
         <Stack
           direction='column'
           flex={1}
-          sx={{ position: "relative", maxHeight: "calc(100vh - 112px)" }}>
+          sx={{ position: "relative" }}
+          justifyContent='flex-start'>
           <Typography
             fontWeight={700}
-            sx={{ position: "absolute", bottom: "100%", left: 0 }}>
+            sx={{
+              position: "absolute",
+              bottom: "100%",
+              left: 0,
+              height: "min-content",
+            }}>
             Preview
           </Typography>
           {!sourceImage ? (
@@ -571,6 +577,7 @@ function Home() {
               sx={{
                 width: "100%",
                 height: "100%",
+                minHeight: "20vw",
                 backgroundColor: "#222",
                 "&::before": {
                   content: '"PREVIEW"',
@@ -602,11 +609,11 @@ function Home() {
       <Stack
         flex={1}
         sx={{
-          p: 5,
+          m: 5,
         }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
-          gap={2}
+          gap={3}
           sx={{ position: "relative" }}>
           <Stack gap={3}>
             <Typography
@@ -707,7 +714,7 @@ function Home() {
             accept='image/*'
             onChange={handleUploadImage}
           />
-          <Stack gap={3}>
+          <Stack gap={3} flex={1}>
             {sourceImage && (
               <Stack gap={2}>
                 <Stack alignItems='center'>
@@ -721,17 +728,15 @@ function Home() {
                   />
                 </Stack>
                 <Stack alignItems='center' gap={2}>
-                  <Stack direction='row'>
-                    <ValueInput
-                      label='폰트 크기'
-                      type='text'
-                      min={8}
-                      max={150}
-                      step={1}
-                      value={fontSize}
-                      handler={setFontSize}
-                    />
-                  </Stack>
+                  <ValueInput
+                    label='폰트 크기'
+                    type='text'
+                    min={8}
+                    max={150}
+                    step={1}
+                    value={fontSize}
+                    handler={setFontSize}
+                  />
 
                   <Select
                     size='small'

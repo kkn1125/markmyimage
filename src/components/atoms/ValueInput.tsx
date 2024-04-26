@@ -82,7 +82,7 @@ function ValueInput({
   }, [handler, max, min, mouseDown, returnOrigin, step]);
 
   return (
-    <Stack direction='row' alignItems='center' gap={1}>
+    <Stack direction='row' alignItems='center' gap={1} sx={{ width: "100%" }}>
       <Box>
         <IconButton
           size='small'
