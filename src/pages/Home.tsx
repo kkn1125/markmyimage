@@ -1,6 +1,13 @@
+import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
+import ImageIcon from "@mui/icons-material/Image";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
 import {
+  Alert,
   Box,
   Button,
+  Chip,
   Divider,
   IconButton,
   MenuItem,
@@ -11,16 +18,42 @@ import {
   Typography,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import ImageIcon from "@mui/icons-material/Image";
+import ValueInput from "../components/atoms/ValueInput";
+
+const compositeOperationList = [
+  "color",
+  "color-burn",
+  "color-dodge",
+  "copy",
+  "darken",
+  "destination-atop",
+  "destination-in",
+  "destination-out",
+  "destination-over",
+  "difference",
+  "exclusion",
+  "hard-light",
+  "hue",
+  "lighten",
+  "lighter",
+  "luminosity",
+  "multiply",
+  "overlay",
+  "saturation",
+  "screen",
+  "soft-light",
+  "source-atop",
+  "source-in",
+  "source-out",
+  "source-over",
+  "xor",
+];
 
 function Home() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const originalImageRef = useRef<HTMLImageElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [defaultPadding, setDefaultPadding] = useState(0);
   const [sourceImage, setSourceImage] = useState<File>();
   const [sourceUrl, setSourceUrl] = useState("");
   const [words, setWords] = useState<string>("YOUR MARK");
@@ -30,7 +63,8 @@ function Home() {
   const [convertImage, setConvertImage] = useState<HTMLImageElement>();
   const [rotate, setRotate] = useState(0);
   const [toggleMultilines, setToggleMultilines] = useState(false);
-  const [wordOffset, setWordOffset] = useState(1);
+  const [wordGap, setWordGap] = useState(5);
+  const [wordOffset, setWordOffset] = useState(0);
   const [quality, setQuality] = useState(1);
   const [moreDetail, setMoreDetail] = useState(false);
   const [fontSize, setFontSize] = useState(16);
@@ -52,6 +86,7 @@ function Home() {
 
     return () => {
       window.removeEventListener("paste", handlePaste);
+      setDefaultPadding(0);
       setSourceImage(undefined);
       setSourceUrl("");
       setWords("YOUR MARK");
@@ -61,8 +96,8 @@ function Home() {
       setConvertImage(undefined);
       setRotate(0);
       setToggleMultilines(false);
-      // setToggleUseDeg(false);
-      setWordOffset(1);
+      setWordGap(5);
+      setWordOffset(0);
       setQuality(1);
       setMoreDetail(false);
       setFontSize(16);
@@ -94,7 +129,6 @@ function Home() {
 
     const image = new Image();
     image.src = sourceUrl;
-
     image.onload = () => {
       setReadyToDraw(true);
       setConvertImage(image);
@@ -115,8 +149,14 @@ function Home() {
 
       if (!ctx || !(ctx instanceof CanvasRenderingContext2D)) return;
 
-      canvas.width = convertImage.width;
-      canvas.height = convertImage.height;
+      canvas.width =
+        imageRotate === 0 || imageRotate === 180
+          ? convertImage.width
+          : convertImage.height;
+      canvas.height =
+        imageRotate === 0 || imageRotate === 180
+          ? convertImage.height
+          : convertImage.width;
 
       const range = (quality: number) => {
         if (0 <= quality && quality < 3) return "low";
@@ -150,131 +190,112 @@ function Home() {
       ctx.drawImage(convertImage, 0, 0);
       ctx.restore();
 
-      const imgHeight = convertImage.height;
-      const imgWidth = convertImage.width;
+      const imgHeight = canvas.height;
+      const imgWidth = canvas.width;
 
       const max = Math.max(imgWidth, imgHeight);
       const min = Math.min(imgWidth, imgHeight);
       const avg = (max + min) / 2;
-      // const ratio = (min * 2) / max;
 
       ctx.font = `bold ${fontSize * (avg / 320)}px sans-serif`;
 
-      const { width, alphabeticBaseline, hangingBaseline } =
-        ctx.measureText(words);
-      // ctx.lineWidth = 2;
-      // ctx.strokeStyle = "#000000a6";
       ctx.fillStyle = colorValue + opacity.toString(16).padStart(2, "0");
-      // console.log(compositeOperation);
       ctx.globalCompositeOperation = compositeOperation;
 
       ctx.save();
 
-      const offset = hangingBaseline * 2;
       if (toggleMultilines) {
-        const deg = (rotate * Math.PI) / 180;
-        // const heightQ = Math.sin(deg) * imgWidth;
-
-        // const reverse = deg < 0;
-        const heightGap = (Math.sin(deg) * imgWidth) / imgHeight;
-        const totalHeight = Math.sqrt(imgWidth ** 2 + imgHeight ** 2);
-        const totalLen = Math.ceil(totalHeight / offset);
         const splitSign = useLine ? "─" : "　";
+        const { width, hangingBaseline } = ctx.measureText(words);
+        const defaultLineOffset = hangingBaseline;
+        const offset = hangingBaseline * 2;
+        const deg = (rotate * Math.PI) / 180;
+        const angleHeight = Math.sqrt(imgWidth ** 2 + imgHeight ** 2);
+        const totalLen = Math.ceil(angleHeight / offset);
 
-        // if (rotate) {
         ctx.translate(
           imgWidth / 2,
           (totalLen * offset) / 2 - ((totalLen - 1) * hangingBaseline) / 2
         );
         ctx.rotate(deg);
-        // }
 
-        for (
-          let i = -Math.ceil(totalLen / 2);
-          i < Math.ceil(totalLen / 2);
-          i += 1
-        ) {
-          // const normal = i * offset;
-          // const strokeHeight = hangingBaseline * 1.5;
-          // if (rotate) {
-          //   strokeHeight = hangingBaseline * 2;
-          // }
+        const totalLines = Math.ceil(imgHeight / offset);
 
+        for (let i = -totalLines; i <= totalLines; i += 1) {
           ctx.textAlign = "center";
+          const empty = splitSign.repeat(wordGap);
+          const { width: emptyWidth } = ctx.measureText(empty);
+          const text = new Array(Math.ceil(angleHeight / width))
+            .fill(words)
+            .join(empty);
 
-          // const krLen = (words.match(/[ㄱ-ㅎ가-힣]/g)?.length ?? 0) * 2;
-          // const enLen = words.match(/[^ㄱ-ㅎ가-힣]/g)?.length ?? 0;
-          // const wordLen = krLen + enLen;
-          // console.log(krLen, enLen);
-
-          // ctx.strokeText(
-          //   /* 갭차이 */
-          //   (words + splitSign.repeat(words.length / 2)).repeat(totalHeight / 2),
-          //   (width / 1.5) * i,
-          //   strokeHeight + i * offset
-          // );
           ctx.fillText(
             /* 갭차이 */
-            (words + splitSign.repeat(words.length / 2)).repeat(
-              totalHeight / 2
-            ),
-            (width / 1.5) * i,
-            heightGap + hangingBaseline * 1.5 + i * offset * wordOffset
+            text,
+            width * (i % 2) - ((width - emptyWidth) / 2) * (i % 2),
+            defaultLineOffset +
+              i * offset +
+              (i + 1) * wordOffset * (defaultLineOffset / 2)
           );
         }
       } else {
+        const { alphabeticBaseline, hangingBaseline } = ctx.measureText(words);
+        const padding = defaultPadding * hangingBaseline * 0.5;
         switch (placement) {
           case "top-left": {
             ctx.textAlign = "left";
-            // ctx.strokeText(words, 0, hangingBaseline);
-            ctx.fillText(words, 0, hangingBaseline);
+            ctx.fillText(words, padding + 0, hangingBaseline + padding);
             break;
           }
           case "top": {
             ctx.textAlign = "center";
-            // ctx.strokeText(words, imgWidth / 2, hangingBaseline);
-            ctx.fillText(words, imgWidth / 2, hangingBaseline);
+            ctx.fillText(words, imgWidth / 2, hangingBaseline + padding);
             break;
           }
           case "top-right": {
             ctx.textAlign = "right";
-            // ctx.strokeText(words, imgWidth, hangingBaseline);
-            ctx.fillText(words, imgWidth, hangingBaseline);
+            ctx.fillText(words, -padding + imgWidth, hangingBaseline + padding);
             break;
           }
           case "bottom-left": {
             ctx.textAlign = "left";
-            // ctx.strokeText(words, 0, imgHeight - alphabeticBaseline);
-            ctx.fillText(words, 0, imgHeight - alphabeticBaseline);
+            ctx.fillText(
+              words,
+              padding + 0,
+              imgHeight - alphabeticBaseline - padding
+            );
             break;
           }
           case "bottom": {
             ctx.textAlign = "center";
-            // ctx.strokeText(words, imgWidth / 2, imgHeight - alphabeticBaseline);
-            ctx.fillText(words, imgWidth / 2, imgHeight - alphabeticBaseline);
+            ctx.fillText(
+              words,
+              imgWidth / 2,
+              imgHeight - alphabeticBaseline - padding
+            );
             break;
           }
           case "bottom-right": {
             ctx.textAlign = "right";
-            // ctx.strokeText(words, imgWidth, imgHeight - alphabeticBaseline);
-            ctx.fillText(words, imgWidth, imgHeight - alphabeticBaseline);
+            ctx.fillText(
+              words,
+              -padding + imgWidth,
+              imgHeight - alphabeticBaseline - padding
+            );
             break;
           }
           case "left": {
             ctx.textAlign = "left";
-            // ctx.strokeText(words, 0, imgHeight / 2);
-            ctx.fillText(words, 0, imgHeight / 2);
+            ctx.fillText(words, padding + 0, imgHeight / 2);
             break;
           }
           case "right": {
             ctx.textAlign = "right";
-            // ctx.strokeText(words, imgWidth, imgHeight / 2);
-            ctx.fillText(words, imgWidth, imgHeight / 2);
+            ctx.fillText(words, -padding + imgWidth, imgHeight / 2);
             break;
           }
           case "center": {
             ctx.textAlign = "center";
-            // ctx.strokeText(words, imgWidth / 2, imgHeight / 2);
             ctx.fillText(words, imgWidth / 2, imgHeight / 2);
             break;
           }
@@ -321,21 +342,20 @@ function Home() {
       //   alert("Mark My Image를 통해 워터마크 적용한 이미지로 판별됩니다.");
       // }
 
-      ctx.globalCompositeOperation = "difference";
-      ctx.fillStyle = "#ffffff57";
-      const size = Math.floor(
-        16 * (Math.max(imgWidth, imgHeight) / Math.min(imgWidth, imgHeight))
-      );
+      const size = Math.floor(8 * (avg / 320));
       ctx.font = `normal ${size}px san-serif`;
       const ownerBy = "published by markmyimage";
       const { width: baseWidth, hangingBaseline: baseline } =
         ctx.measureText(ownerBy);
+      ctx.globalCompositeOperation = "exclusion";
+      ctx.fillStyle = "#ffffff77";
       ctx.fillText(ownerBy, imgWidth - baseWidth - size, imgHeight - baseline);
     }, 0);
   }, [
     colorValue,
     compositeOperation,
     convertImage,
+    defaultPadding,
     fontSize,
     imageRotate,
     moreDetail,
@@ -346,6 +366,7 @@ function Home() {
     rotate,
     toggleMultilines,
     useLine,
+    wordGap,
     wordOffset,
     words,
   ]);
@@ -353,10 +374,11 @@ function Home() {
   useEffect(() => {
     if (!markedImageUrl) return;
     if (!sourceImage) return;
+    const type = sourceImage.type.split("/")[1];
 
     const link = document.createElement("a");
     link.download =
-      sourceImage.name.split(".")[0] + "-convert_by_markmyimage" + ".png";
+      sourceImage.name.split(".")[0] + "-convert_by_markmyimage" + `.${type}`;
     link.href = markedImageUrl;
     link.click();
     link.remove();
@@ -473,36 +495,21 @@ function Home() {
     setToggleMultilines(!toggleMultilines);
   }
 
-  function handleWordOffset(e: ChangeEvent<HTMLInputElement>) {
-    const value = +e.target.value;
-    setWordOffset(value > 0 ? (value < 9 ? value : 9) : 0);
-  }
-
   function handleExport() {
     const canvasRef = canvas.current;
     if (!canvasRef) return;
+    if (!sourceImage) return;
 
-    // setImageByMarkMyImage();
-
-    const pngUrl = canvasRef.toDataURL("image/png", quality);
+    let pngUrl = canvasRef.toDataURL(sourceImage.type, quality);
+    if (sourceImage.type.endsWith("gif")) {
+      pngUrl = pngUrl.replace(/^data:image\/(.+);/, `data:image/gif;`);
+    }
+    // console.log(pngUrl);
     setMarkedImageUrl(pngUrl);
-  }
-
-  function handleQuality(e: ChangeEvent<HTMLInputElement>) {
-    const value = +e.target.value;
-    setQuality(value);
   }
 
   function handleMoreDetailToggle() {
     setMoreDetail(!moreDetail);
-  }
-
-  function handleChangeFontSize(e: ChangeEvent<HTMLInputElement>) {
-    const value = +e.target.value;
-    if (Number.isNaN(value)) {
-      return;
-    }
-    setFontSize(value > 8 ? (value < 150 ? value : 150) : 8);
   }
 
   function handleChangeColor(e: ChangeEvent<HTMLInputElement>) {
@@ -513,14 +520,6 @@ function Home() {
   function handleChangeOpacity(e: ChangeEvent<HTMLInputElement>) {
     const value = +e.target.value;
     setOpacity(value);
-  }
-
-  function handleRotate(e: ChangeEvent<HTMLInputElement>) {
-    const value = +e.target.value;
-    if (Number.isNaN(value)) {
-      return;
-    }
-    setRotate(Math.abs(value) >= 360 ? 0 : value);
   }
 
   function handleUseLine() {
@@ -542,12 +541,6 @@ function Home() {
   function handleChangeComposite(e: SelectChangeEvent) {
     setCompositeOperation(e.target.value as GlobalCompositeOperation);
   }
-
-  // const ex = keyframes`
-  //   0%{box-shadow: 0px 0px 0px 0px #dd489600;}
-  //   50%{box-shadow: 0px 0px 1rem 0px #dd489656;}
-  //   100%{box-shadow: 0px 0px 0px 0px #dd489600;}
-  // `;
 
   return (
     <Stack
@@ -614,56 +607,97 @@ function Home() {
         <Stack
           direction={{ xs: "column", md: "row" }}
           gap={2}
-          sx={{ position: "relative" /* maxHeight: "calc(100vh - 112px)" */ }}>
-          <Stack>
+          sx={{ position: "relative" }}>
+          <Stack gap={3}>
             <Typography
               fontWeight={700}
               sx={{ position: "absolute", bottom: "100%", left: 0 }}>
               Original
             </Typography>
-            <Stack
-              component='label'
-              justifyContent='flex-start'
-              alignItems='center'
-              htmlFor='imginput'
-              sx={{
-                position: "relative",
-                backgroundColor: sourceUrl ? "transparent" : "#222",
-                width: "auto",
-                minWidth: 150,
-                maxWidth: "100%",
-                maxHeight: "100%",
-                height: "min-content",
-                ...(!sourceUrl && {
-                  border: "3px dashed #444444",
-                  "&::before": {
-                    m: "auto",
-                    content: '"🖼️ upload"',
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    my: 8,
-                  },
-                }),
-              }}>
-              <Box
-                ref={originalImageRef}
-                component='img'
-                {...(sourceUrl && {
-                  src: sourceUrl,
-                })}
+            <Stack direction='row'>
+              <Stack
+                component='label'
+                justifyContent='flex-start'
+                alignItems='center'
+                htmlFor='imginput'
                 sx={{
-                  position: "relativee",
-                  maxWidth: 300,
-                  display: "none",
-                  "&[src]": {
-                    display: "block",
-                    zIndex: 1,
-                  },
+                  position: "relative",
+                  display: "inline-flex",
+                  backgroundColor: sourceUrl ? "transparent" : "#222",
                   width: "auto",
+                  minWidth: 150,
+                  maxWidth: "100%",
                   maxHeight: "100%",
-                }}
-              />
+                  height: "min-content",
+                  ...(!sourceUrl && {
+                    border: "3px dashed #444444",
+                    "&::before": {
+                      m: "auto",
+                      content: '"🖼️ upload"',
+                      textTransform: "uppercase",
+                      fontWeight: 700,
+                      my: 8,
+                    },
+                  }),
+                }}>
+                <Box
+                  ref={originalImageRef}
+                  component='img'
+                  {...(sourceUrl && {
+                    src: sourceUrl,
+                  })}
+                  sx={{
+                    position: "relativee",
+                    maxWidth: 300,
+                    display: "none",
+                    "&[src]": {
+                      display: "block",
+                      zIndex: 1,
+                    },
+                    width: "auto",
+                    maxHeight: "100%",
+                  }}
+                />
+              </Stack>
             </Stack>
+            {sourceImage && (
+              <Stack gap={1} flex={1}>
+                <Stack direction='row' alignItems='flex-start' gap={1}>
+                  <Chip color='primary' size='small' label='image size' />
+                  <Stack>
+                    <Typography>
+                      {(sourceImage.size / 1024 / 1024).toFixed(2)} MB
+                    </Typography>
+                    <Typography>
+                      {(sourceImage.size / 1024).toFixed(2)} KB
+                    </Typography>
+                  </Stack>
+                </Stack>
+                <Stack direction='row' alignItems='flex-start' gap={1}>
+                  <Chip color='primary' size='small' label='image name' />
+                  <Typography>{sourceImage.name}</Typography>
+                </Stack>
+                <Stack
+                  direction='row'
+                  alignItems='flex-start'
+                  gap={1}
+                  flexWrap='wrap'>
+                  <Chip color='primary' size='small' label='image type' />
+                  <Typography>{sourceImage.type}</Typography>
+                  {sourceImage.type.endsWith("gif") && (
+                    <Alert color='warning' variant='outlined'>
+                      GIF 파일은 첫 프레임만 적용되므로 재생되지 않습니다.
+                    </Alert>
+                  )}
+                </Stack>
+                {convertImage && (
+                  <Stack direction='row' alignItems='flex-start' gap={1}>
+                    <Chip color='primary' size='small' label='image size' />
+                    {convertImage.width} x {convertImage.height}
+                  </Stack>
+                )}
+              </Stack>
+            )}
           </Stack>
           <input
             ref={uploadInputRef}
@@ -687,14 +721,18 @@ function Home() {
                   />
                 </Stack>
                 <Stack alignItems='center' gap={2}>
-                  <TextField
-                    fullWidth
-                    label='폰트 크기'
-                    type='text'
-                    value={fontSize}
-                    size='small'
-                    onChange={handleChangeFontSize}
-                  />
+                  <Stack direction='row'>
+                    <ValueInput
+                      label='폰트 크기'
+                      type='text'
+                      min={8}
+                      max={150}
+                      step={1}
+                      value={fontSize}
+                      handler={setFontSize}
+                    />
+                  </Stack>
+
                   <Select
                     size='small'
                     fullWidth
@@ -704,34 +742,7 @@ function Home() {
                     label='Age'
                     onChange={handleChangeComposite}>
                     <MenuItem value={""}></MenuItem>
-                    {[
-                      "color",
-                      "color-burn",
-                      "color-dodge",
-                      "copy",
-                      "darken",
-                      "destination-atop",
-                      "destination-in",
-                      "destination-out",
-                      "destination-over",
-                      "difference",
-                      "exclusion",
-                      "hard-light",
-                      "hue",
-                      "lighten",
-                      "lighter",
-                      "luminosity",
-                      "multiply",
-                      "overlay",
-                      "saturation",
-                      "screen",
-                      "soft-light",
-                      "source-atop",
-                      "source-in",
-                      "source-out",
-                      "source-over",
-                      "xor",
-                    ].map((key) => (
+                    {compositeOperationList.map((key) => (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
@@ -832,54 +843,61 @@ function Home() {
                       {useLine ? "라인 채우기" : "공백 채우기"}
                     </Button>
                   )}
-                  {toggleMultilines && (
-                    <TextField
-                      fullWidth
-                      label='오프셋'
-                      size='small'
+                  {!toggleMultilines && (
+                    <ValueInput
+                      label='워딩 패드'
                       type='text'
-                      // inputProps={{
-                      //   min: 1,
-                      //   max: 2,
-                      //   step: 0.01,
-                      // }}
-                      value={wordOffset}
-                      onChange={handleWordOffset}
+                      value={defaultPadding}
+                      handler={setDefaultPadding}
+                      min={0}
+                      max={25}
+                      step={0.5}
                     />
                   )}
                   {toggleMultilines && (
-                    <TextField
-                      fullWidth
-                      label='각도'
-                      size='small'
+                    <ValueInput
+                      label='워딩 간격'
                       type='text'
-                      inputProps={{
-                        min: -360,
-                        max: 360,
-                        step: 1,
-                        pattern: "-?[0-9]+",
-                      }}
+                      value={wordGap}
+                      handler={setWordGap}
+                      min={0}
+                      max={25}
+                      step={1}
+                    />
+                  )}
+                  {toggleMultilines && (
+                    <ValueInput
+                      label='라인 오프셋'
+                      type='text'
+                      value={wordOffset}
+                      handler={setWordOffset}
+                      min={0}
+                      max={25}
+                      step={0.1}
+                    />
+                  )}
+                  {toggleMultilines && (
+                    <ValueInput
+                      label='각도'
+                      type='text'
                       value={rotate}
-                      onChange={handleRotate}
+                      handler={setRotate}
+                      min={0}
+                      max={360}
+                      step={1}
+                      returnOrigin
                     />
                   )}
                 </Stack>
-                <Stack gap={1}>
-                  <TextField
-                    fullWidth
+                <Stack gap={2}>
+                  <ValueInput
                     label='이미지 퀄리티'
-                    size='small'
-                    type='number'
-                    inputProps={{
-                      min: 0.1,
-                      max: 1,
-                      step: 0.1,
-                    }}
+                    type='text'
                     value={quality}
-                    onChange={handleQuality}
-                    sx={{
-                      flex: 0.55,
-                    }}
+                    handler={setQuality}
+                    min={0}
+                    max={1}
+                    step={0.1}
                   />
                   <Button variant='outlined' onClick={handleMoreDetailToggle}>
                     {moreDetail ? "선명하게" : "원본"}
